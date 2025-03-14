@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GPIO Control</title>
+    <script>
+        function setMove(dir, speed) {
+            const url = `http://172.20.10.13:8080/direction?dir=${dir}&speed=${speed}`;
+            // command python3 -m http.server 8000
+            // home ip address: http://192.168.1.203:8080/direction?dir=${dir}&speed=${speed}
+            // hotspot ip address: http://172.20.10.13:8080/direction?dir=${dir}&speed=${speed}
+            // replace with your Raspberry Pi IP address http://<ADDRESS>:8080/direction?dir=${dir}&speed=${speed}
+            fetch(url)
+                .then(response => response.text())
+                .then(data => {
+                    document.getElementById("log").innerHTML = data;
+                    fetchSensorStatus(); 
+                })
+                .catch(error => {
+                    console.error("Error:", error);
+                    document.getElementById("log").innerHTML = "Failed to send request.";
+                });
+        }
+        function fetchSensorStatus() {
+            fetch("http://172.20.10.13:8080/status")
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById("X").innerText = data.X;
+                    document.getElementById("Y").innerText = data.Y;
+                    document.getElementById("Z").innerText = data.Z;
+                })
+                .catch(error => {
+                    console.error("Error fetching Sensor status:", error);
+                });
+        }
+        setInterval(fetchSensorStatus, 1000);
+    </script>
+</head>
+<body onload="fetchSensorStatus()">
+    <h1>Raspberry Pi GPIO Control</h1>
+    
+    <button onclick="setMove(2, 0)">Left</button>
+    <button onclick="setMove(0, 0)">Forward</button>
+    
+    <button onclick="setMove(1, 0)">Back</button>
+    <button onclick="setMove(3, 0)">Right</button>
+
+    <h2>Sensor Status</h2>
+    <p>Ax: <span id="X">-</span></p>
+    <p>Ay: <span id="Y">-</span></p>
+    <p>Az: <span id="Z">-</span></p>
+
+    <p id="log">Status: Waiting for action...</p>
+</body>
+</html>
